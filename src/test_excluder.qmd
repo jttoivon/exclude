@@ -1,0 +1,26 @@
+---
+title: "Test excluder"
+format: html
+editor: source
+---
+
+## Excluder
+
+```{r}
+library(tidyverse)
+source("excluder.R")
+```
+
+
+```{r}
+mpg %>% init_excluder("testi") %>%
+  filter(manufacturer=="audi") %>%
+  excluder()
+```
+
+```{r}
+dump_excluder(filename = stdout())
+#dump_excluder(filename = "/tmp/testi")
+```
+
+
