@@ -11,10 +11,21 @@ library(tidyverse)
 source("excluder.R")
 ```
 
+```{r}
+load("~/data/private/new_donation_data/donationdata.20230606151703.rdata", verbose=TRUE)
+donation <- donationdata$donation %>% head(n=1000)
+statistics2 <- function(df) { list(count = nrow(df), donor_count=n_distinct(df$releaseID)) }
+
+donation %>% 
+  init_excluder("test2", statistics2) %>%
+  filter(!is.na(DonationVolume)) %>%
+  excluder("Filtered NA values in DonationVolume ({old$count-new$count} donations, {old$donor_count-new$donor_count} donors)")
+  
+```
 
 ```{r}
 mpg %>% init_excluder("testi") %>%
-  filter(manufacturer=="audi") %>%
+  filter(manufacturer == "audi") %>%
   excluder()
 ```
 
