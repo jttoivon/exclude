@@ -1,14 +1,27 @@
 library(glue)
 
+new_exclude <- function(stats, df, log, statistics) {
+  #stopifnot(is.character(prefix))
+  structure(list(old=stats, .df=df, .log=log, .statistics=statistics), class = "exclude")
+}
+
 init_exclude <- function(data, e_name, 
                           statistics = function(data) { list(count = nrow(data)) },
                           name = "Original data") {
   if (is.null(.GlobalEnv[[".Exclude"]]))
-    .GlobalEnv[[".Exclude"]] <- list()
+    .GlobalEnv[[".Exclude"]] <- list()   # This will contain all Exclude objects
   
   .GlobalEnv[[".Exclude"]][[".current_e_name"]] <- e_name  # Set the name of the current exclude object
   stats <- statistics(data)
-  .GlobalEnv[[".Exclude"]][[e_name]] <- list(old=stats, .df=as_tibble_row(stats) %>% mutate(name=name, .before=1), .log=c(), .statistics=statistics)
+
+  pretty <- function(x) format(x, big.mark=",", trim=TRUE)
+  
+  remain <- imap_chr(stats, function(value, key) glue("{key}={pretty(value)}")) %>% paste(collapse=" ")
+  diff <- map_chr(names(stats), function(key) glue("{key}=0")) %>% paste(collapse=" ")
+  msg <- glue("{name}: excluded {diff}, remaining {remain}")
+  
+  df <- as_tibble_row(stats) %>% mutate(name=name, .before=1)
+  .GlobalEnv[[".Exclude"]][[e_name]] <- new_exclude(stats, df, msg, statistics)
   invisible(data)
 }
 
@@ -48,10 +61,25 @@ exclude <- function(data,
   data
 }
 
+get_exclude <- function(e_name=NULL) {
+  if (is.null(e_name))
+    e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
+  .GlobalEnv[[".Exclude"]][[e_name]]
+}
+
+print.exclude <- function(object) {
+  cat(object$.log, sep="\n")
+}
+
 dump_exclude <- function(filename, e_name=NULL) {
   if (is.null(e_name))
     e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
   writeLines(.GlobalEnv[[".Exclude"]][[e_name]]$.log, filename)
+}
+
+as_tibble.exclude <- function(object) {
+  object$.df %>% 
+    mutate(across(-name, function (x) lag(x) - x, .names="diff_{.col}"))  
 }
 
 get_tibble <- function(e_name=NULL) {
@@ -79,7 +107,7 @@ plot_flow <- function(df) {
     mutate(across(all_of(diff_cols), function(x) sprintf("%s=%s", str_remove(cur_column(), "^diff_"), pretty(x)))) %>%
     unite(diff, all_of(diff_cols), sep="\\l")
   
-  print(df)
+  #print(df)
   
   # Remain nodes
   df[[1, 'remain']] <- paste(orig, df[[1, 'remain']], sep="\\l")
@@ -108,3 +136,8 @@ plot_flow <- function(df) {
   }}')
   flow
 }
+
+plot.exclude <- function(object) {
+  as_tibble(object) %>% plot_flow() %>% grViz()
+}
+
