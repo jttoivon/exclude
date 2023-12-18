@@ -8,7 +8,8 @@ editor: source
 
 ```{r}
 library(tidyverse)
-source("excluder.R")
+library(DiagrammeR)
+source("exclude.R")
 ```
 
 ```{r}
@@ -17,23 +18,27 @@ donation <- donationdata$donation %>% head(n=2000)
 statistics2 <- function(df) { list(count = nrow(df), donor_count=n_distinct(df$releaseID)) }
 
 donation %>% 
-  init_excluder("test2", statistics2) %>%
+  init_exclude("test2", statistics2) %>%
   filter(!is.na(DonationVolume)) %>%
-  excluder("Excluded NA values in DonationVolume") %>%
+  exclude("Excluded NA values in DonationVolume") %>%
   filter(!biobank) %>%
-  excluder("Excluded biobank members")
+  exclude("Excluded biobank members")
   #excluder("Filtered NA values in DonationVolume ({old$count-new$count} donations, {old$donor_count-new$donor_count} donors)")
   
 ```
 
 ```{r}
-mpg %>% init_excluder("testi") %>%
-  filter(manufacturer == "audi") %>%
-  excluder()
+get_tibble("test2") %>% plot_flow() %>% grViz()
 ```
 
 ```{r}
-dump_excluder(filename = stdout())
+mpg %>% init_exclude("testi") %>%
+  filter(manufacturer == "audi") %>%
+  exclude()
+```
+
+```{r}
+dump_exclude(filename = stdout())
 #dump_excluder(filename = "/tmp/testi")
 ```
 
