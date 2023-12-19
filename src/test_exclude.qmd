@@ -9,8 +9,7 @@ editor: source
 ```{r}
 library(tidyverse)
 library(DiagrammeR)
-
-source("exclude.R")
+library(exclude)
 ```
 
 ```{r}
@@ -32,15 +31,6 @@ donation %>%
 get_tibble("test2") %>% plot_flow() %>% grViz()
 ```
 
-```{r}
-mpg %>% init_exclude("testi") %>%
-  filter(manufacturer == "audi") %>%
-  exclude()
-```
 
-```{r}
-dump_exclude(filename = stdout())
-#dump_excluder(filename = "/tmp/testi")
-```
 
 

@@ -93,11 +93,11 @@ exclude <- function(data,
   data
 }
 
-#' Title
+#' Get the exclude object with name e_name
 #'
-#' @param e_name
+#' @param e_name Name of the wanted exclude object.
 #'
-#' @return
+#' @return An exclude object.
 #' @export
 #'
 #' @examples
@@ -107,11 +107,12 @@ get_exclude <- function(e_name=NULL) {
   .GlobalEnv[[".Exclude"]][[e_name]]
 }
 
-#' Title
+#' Print the exclude object
 #'
-#' @param x Object of class exclude
+#' @param x Object of class exclude.
+#' @param ... Just to satisfy the requirement of the generic function.
 #'
-#' @return
+#' @return None
 #' @export
 #'
 #' @examples
@@ -125,10 +126,21 @@ dump_exclude <- function(filename, e_name=NULL) {
   writeLines(.GlobalEnv[[".Exclude"]][[e_name]]$.log, filename)
 }
 
-# as_tibble.exclude <- function(object, ...) {
-#   object$.df %>%
-#     dplyr::mutate(across(-name, function (x) lag(x) - x, .names="diff_{.col}"))
-# }
+#' Convert an exclude object to tibble
+#'
+#' @param x An object of class exclude
+#' @param ... Dummy
+#'
+#' @return A Tibble.
+#' @export
+#' @importFrom stats lag
+#' @importFrom tibble as_tibble
+#'
+#' @examples
+as_tibble.exclude <- function(x, ...) {
+  x$.df %>%
+    dplyr::mutate(dplyr::across(-"name", function (c) lag(c) - c, .names="diff_{.col}"))
+}
 
 # get_tibble <- function(e_name=NULL) {
 #   if (is.null(e_name))
@@ -138,22 +150,22 @@ dump_exclude <- function(filename, e_name=NULL) {
 # }
 
 plot_flow <- function(df) {
-  orig <- df %>% dplyr::pluck("name", 1)   # Save the name of the original dataset
-  remain_cols <- df %>% dplyr::select(!(name | tidyselect::starts_with("diff_"))) %>% colnames()
+  orig <- df %>% purrr::pluck("name", 1)   # Save the name of the original dataset
+  remain_cols <- df %>% dplyr::select(!("name" | tidyselect::starts_with("diff_"))) %>% colnames()
   diff_cols <- df %>% dplyr::select(tidyselect::starts_with("diff_")) %>% colnames()
 
   pretty <- function(x) format(x, big.mark=",", trim=TRUE)
 
-  df <- df %>% dplyr::mutate(dplyr::across(tidyselect::all_of(diff_cols) | name, dplyr::lead)) # Use thousand separators when printing a number
+  df <- df %>% dplyr::mutate(dplyr::across(tidyselect::all_of(diff_cols) | "name", dplyr::lead)) # Use thousand separators when printing a number
 
   # Remain nodes
   df <- df %>%
     dplyr::mutate(dplyr::across(tidyselect::all_of(remain_cols), function(x) sprintf("%s=%s", dplyr::cur_column(), pretty(x)))) %>%
-    dplyr::unite(remain, tidyselect::all_of(remain_cols), sep="\\l")
+    tidyr::unite("remain", tidyselect::all_of(remain_cols), sep="\\l")
   # Diff nodes
   df <- df %>%
-    dplyr::mutate(dplyr::across(tidyselect::all_of(diff_cols), function(x) sprintf("%s=%s", stringr::str_remove(cur_column(), "^diff_"), pretty(x)))) %>%
-    dplyr::unite(diff, tidyselect::all_of(diff_cols), sep="\\l")
+    dplyr::mutate(dplyr::across(tidyselect::all_of(diff_cols), function(x) sprintf("%s=%s", stringr::str_remove(dplyr::cur_column(), "^diff_"), pretty(x)))) %>%
+    tidyr::unite(diff, tidyselect::all_of(diff_cols), sep="\\l")
 
   #print(df)
 
@@ -185,7 +197,16 @@ plot_flow <- function(df) {
   flow
 }
 
-plot.exclude <- function(object) {
-  tibble::as_tibble(object) %>% plot_flow() %>% DiagrammeR::grViz()
+#' Plot the exclusion diagram
+#'
+#' @param x An exclude object
+#' @param ... Just to satisfy the requirement of the generic function.
+#'
+#' @return An object of class htmlwidget
+#' @export
+#'
+#' @examples
+plot.exclude <- function(x, ...) {
+  tibble::as_tibble(x) %>% plot_flow() %>% DiagrammeR::grViz()
 }
 
