@@ -27,7 +27,7 @@ new_exclude <- function(stats, df, log, statistics) {
 #' @export
 #'
 #' @examples
-init_exclude <- function(data, e_name,
+init_exclude <- function(data, e_name = "default",
                           statistics = function(data) { list(count = nrow(data)) },
                           name = "Original data") {
   if (is.null(.GlobalEnv[[".Exclude"]]))

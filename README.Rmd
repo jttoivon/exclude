@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of exclude is to ...
+The goal of exclude is to keep track of excluded dataframe rows.
 
 ## Installation
 
@@ -42,20 +42,38 @@ What is special about using `README.Rmd` instead of just `README.md`? You can in
 ```{r cars}
 ## basic example code
 mpg %>% 
-  init_exclude("test") %>%
+  init_exclude() %>%
   filter(manufacturer == "audi") %>%
   exclude()
 e <- get_exclude()
-#as_tibble(e)
 e
 ```
 
 You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
 
-You can also embed plots, for example:
+```{r}
+as_tibble(e)
+```
+
+You can also plots the object with `plot(e)`, for example:
 
 ```{r pressure, echo = FALSE}
-#plot(e)
+tibble::as_tibble(e) %>% plot_flow()
+```
+
+https://quarto.org/docs/authoring/diagrams.html
+
+```{dot}
+digraph graphname {
+node [shape="box"];
+labeljust = l
+             P1 [label = "Original data\lcount=234"]
+P2 [label = "count=18"]
+             M1 [label = "count=0"]
+             P1 -> P2
+             P1 -> M1[label="Exclusion"]
+             { rank=same; P1; M1}
+}
 ```
 
 In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

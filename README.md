@@ -67,7 +67,6 @@ mpg %>%
 #> 17 audi         a6 quattro   3.1  2008     6 auto… 4        17    25 p     mids…
 #> 18 audi         a6 quattro   4.2  2008     8 auto… 4        16    23 p     mids…
 e <- get_exclude()
-#as_tibble(e)
 e
 #> Original data: excluded count=0, remaining count=234
 #> Exclusion: excluded count=216, remaining count=18
@@ -76,7 +75,31 @@ e
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
 up-to-date. `devtools::build_readme()` is handy for this.
 
-You can also embed plots, for example:
+``` r
+as_tibble(e)
+#> # A tibble: 2 × 3
+#>   name          count diff_count
+#>   <chr>         <int>      <int>
+#> 1 Original data   234          0
+#> 2 Exclusion        18          0
+```
+
+You can also plots the object with `plot(e)`, for example:
+
+``` dot
+digraph graphname {
+node [shape="box"];
+labeljust = l
+             P1 [label = "Original data\lcount=234"]
+P2 [label = "count=18"]
+             M1 [label = "count=0"]
+             P1 -> P2
+             P1 -> M1[label="Exclusion"]
+             { rank=same; P1; M1}
+}
+```
+
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
 
 In that case, don’t forget to commit and push the resulting figure
 files, so they display on GitHub and CRAN.
