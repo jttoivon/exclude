@@ -28,7 +28,7 @@ You can install the development version of exclude like so:
 devtools::install_github("FRCBS/exclude")
 ```
 
-## Example
+## Examples
 
 This is a basic example which shows you how to solve a common problem:
 
@@ -39,7 +39,7 @@ library(tidyverse)
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
 
-```{r cars}
+```{r Example 1}
 ## basic example code
 mpg %>% 
   init_exclude() %>%
@@ -55,11 +55,43 @@ You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-da
 as_tibble(e)
 ```
 
-You can also plots the object with `plot(e)`, for example:
+You can also plot the object with `plot(e)`, for example:
 
-```{r pressure, echo = FALSE}
-tibble::as_tibble(e) %>% plot_flow()
+```{r, eval=FALSE}
+#tibble::as_tibble(e) %>% plot_flow()
+plot(e)
 ```
+
+```{r, echo=FALSE}
+library(DiagrammeRsvg)
+p <- plot(e)
+cat(export_svg(p), file = "man/figures/plot.svg")
+```
+
+![alt text](man/figures/plot.svg)
+
+```{r Example 2}
+## basic example code
+statistics <- function(df) { list(count = nrow(df), models=n_distinct(df$model)) }
+mpg %>% 
+  init_exclude(statistics = statistics) %>%
+  filter(manufacturer == "audi") %>%
+  exclude("Exclude non-Audi") %>%
+  filter(cyl < 8) %>%
+  exclude("Exclude 8-cylinder cars")
+e2 <- get_exclude()
+e2
+```
+
+```{r, eval=FALSE}
+plot(e2)
+```
+
+```{r, echo=FALSE}
+cat(export_svg(plot(e2)), file = "man/figures/plot2.svg")
+```
+
+![alt text](man/figures/plot2.svg)
 
 https://quarto.org/docs/authoring/diagrams.html
 

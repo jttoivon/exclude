@@ -133,13 +133,14 @@ dump_exclude <- function(filename, e_name=NULL) {
 #'
 #' @return A Tibble.
 #' @export
-#' @importFrom stats lag
+#' @importFrom dplyr lag
 #' @importFrom tibble as_tibble
 #'
 #' @examples
 as_tibble.exclude <- function(x, ...) {
+  # For some reason I need to use dplyr::lag instead of stats::lag
   x$.df %>%
-    dplyr::mutate(dplyr::across(-"name", function (c) lag(c) - c, .names="diff_{.col}"))
+    dplyr::mutate(dplyr::across(-"name", function (c) {dplyr::lag(c) - c}, .names="diff_{.col}"))
 }
 
 # get_tibble <- function(e_name=NULL) {
