@@ -143,6 +143,20 @@ as_tibble.exclude <- function(x, ...) {
     dplyr::mutate(dplyr::across(-"name", function (c) {dplyr::lag(c) - c}, .names="diff_{.col}"))
 }
 
+#' Convert an exclude object to a data frame
+#'
+#' @param x An object of class exclude
+#' @param ... Dummy
+#'
+#' @return A data.frame.
+#' @export
+#' @importFrom tibble as_tibble
+#'
+#' @examples
+as.data.frame.exclude <- function(x, ...) {
+  base::as.data.frame(tibble::as_tibble(x))
+}
+
 # get_tibble <- function(e_name=NULL) {
 #   if (is.null(e_name))
 #     e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
@@ -150,6 +164,19 @@ as_tibble.exclude <- function(x, ...) {
 #     mutate(across(-name, function (x) lag(x) - x, .names="diff_{.col}"))
 # }
 
+#' Visualize the exclusion flow as a string in the dot language
+#'
+#' @description
+#' The dot string can then be saved to a file with `cat(plot_flow(as_tibble(e)), file="example.dot")`
+#' call, and the converted to png format using the following command:
+#' `dot example.dot -T png -o example.png`
+#'
+#' @param df A data frame in form returned by as_tibble or as.data.frame
+#'
+#' @return A character vector describing are graph in the dot language
+#' @export
+#'
+#' @examples
 plot_flow <- function(df) {
   orig <- df %>% purrr::pluck("name", 1)   # Save the name of the original dataset
   remain_cols <- df %>% dplyr::select(!("name" | tidyselect::starts_with("diff_"))) %>% colnames()

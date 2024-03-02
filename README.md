@@ -87,9 +87,17 @@ as_tibble(e)
 You can also plot the object with `plot(e)`, for example:
 
 ``` r
-#tibble::as_tibble(e) %>% plot_flow()
 plot(e)
 ```
+
+<!--
+Since plot calls DiagrammeR::grViz(), which returns htmlwidget, it cannot be included in an
+md file directly. Below I use DiagrammeRsvg::export_svg() to convert htmlwidget to svg,
+and then refer to the svg file from the md file. Other solution is to use the webshot2 package:
+htmlwidgets::saveWidget(plot(e), "/tmp/x.html")
+webshot2::webshot("/tmp/x.html", "/tmp/x.png")
+And the refer to the png file from the md file.
+-->
 
 <figure>
 <img src="man/figures/plot.svg" alt="alt text" />
@@ -158,7 +166,7 @@ P2 [label = "count=18"]
 }
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+<img src="man/figures/README-dot_example-1.png" width="100%" />
 
 In that case, don’t forget to commit and push the resulting figure
 files, so they display on GitHub and CRAN.

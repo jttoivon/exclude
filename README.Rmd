@@ -32,7 +32,7 @@ devtools::install_github("FRCBS/exclude")
 
 This is a basic example which shows you how to solve a common problem:
 
-```{r example}
+```{r setup}
 library(exclude)
 library(tidyverse)
 ```
@@ -58,14 +58,21 @@ as_tibble(e)
 You can also plot the object with `plot(e)`, for example:
 
 ```{r, eval=FALSE}
-#tibble::as_tibble(e) %>% plot_flow()
 plot(e)
 ```
 
-```{r, echo=FALSE}
+<!--
+Since plot calls DiagrammeR::grViz(), which returns htmlwidget, it cannot be included in an
+md file directly. Below I use DiagrammeRsvg::export_svg() to convert htmlwidget to svg,
+and then refer to the svg file from the md file. Other solution is to use the webshot2 package:
+htmlwidgets::saveWidget(plot(e), "/tmp/x.html")
+webshot2::webshot("/tmp/x.html", "/tmp/x.png")
+And the refer to the png file from the md file.
+-->
+
+```{r plot1, echo=FALSE}
 library(DiagrammeRsvg)
-p <- plot(e)
-cat(export_svg(p), file = "man/figures/plot.svg")
+cat(export_svg(plot(e)), file = "man/figures/plot.svg")
 ```
 
 ![alt text](man/figures/plot.svg)
@@ -87,7 +94,7 @@ e2
 plot(e2)
 ```
 
-```{r, echo=FALSE}
+```{r plot2, echo=FALSE}
 cat(export_svg(plot(e2)), file = "man/figures/plot2.svg")
 ```
 
@@ -95,7 +102,7 @@ cat(export_svg(plot(e2)), file = "man/figures/plot2.svg")
 
 https://quarto.org/docs/authoring/diagrams.html
 
-```{dot}
+```{dot dot_example}
 digraph graphname {
 node [shape="box"];
 labeljust = l
