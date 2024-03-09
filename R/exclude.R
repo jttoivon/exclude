@@ -1,5 +1,3 @@
-#library(glue)
-
 #' A constructor for exclude class.
 #'
 #' @param stats A named list of statistics values.
@@ -133,7 +131,6 @@ dump_exclude <- function(filename, e_name=NULL) {
 #'
 #' @return A Tibble.
 #' @export
-#' @importFrom dplyr lag
 #' @importFrom tibble as_tibble
 #'
 #' @examples
@@ -236,5 +233,26 @@ plot_flow <- function(df) {
 #' @examples
 plot.exclude <- function(x, ...) {
   tibble::as_tibble(x) %>% plot_flow() %>% DiagrammeR::grViz()
+}
+
+ls <- function() {
+  setdiff(names(.GlobalEnv[[".Exclude"]]), ".current_e_name")
+}
+
+pop <- function(e_name=NULL) {
+  if (is.null(e_name))
+    e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
+  e <- .GlobalEnv[[".Exclude"]][[e_name]]
+  #rm(ename, envir=.GlobalEnv[[".Exclude"]])
+  .GlobalEnv[[".Exclude"]][[e_name]] <- NULL
+  e
+}
+
+push <- function(e, e_name=NULL) {
+  if (is.null(e_name))
+    e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
+  old <- .GlobalEnv[[".Exclude"]][[e_name]]
+  .GlobalEnv[[".Exclude"]][[e_name]] <- e
+  old
 }
 
