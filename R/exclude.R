@@ -1,3 +1,9 @@
+# TODO
+# * DONE Add option whether to emit messages or not
+# * Change parameter name fmt to something more sensible
+# * Add examples to functions
+# * Can exclude be made to work for vectors in addition to dataframe?
+
 #' A constructor for exclude class.
 #'
 #' @param stats A named list of statistics values.
@@ -28,8 +34,6 @@ new_exclude <- function(stats, df, log, statistics) {
 init_exclude <- function(data, e_name = "default",
                           statistics = function(data) { list(count = nrow(data)) },
                           name = "Original data") {
-  if (is.null(.GlobalEnv[[".Exclude"]]))
-    .GlobalEnv[[".Exclude"]] <- list()   # This will contain all Exclude objects
 
   .GlobalEnv[[".Exclude"]][[".current_e_name"]] <- e_name  # Set the name of the current exclude object
   stats <- statistics(data)
@@ -77,7 +81,7 @@ exclude <- function(data,
   diff <- purrr::map_chr(names(stats), function(key) glue::glue("{key}={pretty(old_stats[[key]]-stats[[key]])}")) %>% paste(collapse=" ")
   msg <- glue::glue("{fmt}: excluded {diff}, remaining {remain}")
   #msg <- glue(fmt, .envir = .GlobalEnv[[".Exclude"]][[e_name]])
-  message(msg)
+  if (getOption("exclude.print_messages")) message(msg)
 
   df <- df %>% tibble::add_row(tibble::as_tibble_row(stats) %>% dplyr::mutate(name=fmt))
 
@@ -234,6 +238,8 @@ plot_flow <- function(df) {
 plot.exclude <- function(x, ...) {
   tibble::as_tibble(x) %>% plot_flow() %>% DiagrammeR::grViz()
 }
+
+# These functions are mainly used as helpers in testing
 
 ls <- function() {
   setdiff(names(.GlobalEnv[[".Exclude"]]), ".current_e_name")
