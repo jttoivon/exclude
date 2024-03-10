@@ -100,19 +100,4 @@ cat(export_svg(plot(e2)), file = "man/figures/plot2.svg")
 
 ![alt text](man/figures/plot2.svg)
 
-https://quarto.org/docs/authoring/diagrams.html
 
-```{dot dot_example}
-digraph graphname {
-node [shape="box"];
-labeljust = l
-             P1 [label = "Original data\lcount=234"]
-P2 [label = "count=18"]
-             M1 [label = "count=0"]
-             P1 -> P2
-             P1 -> M1[label="Exclusion"]
-             { rank=same; P1; M1}
-}
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

@@ -3,7 +3,7 @@
 # * Change parameter name fmt to something more sensible
 # * Add examples to functions
 # * Can exclude be made to work for vectors in addition to dataframe?
-
+# * Use some data from base instead of ggplot2::mpg
 #' A constructor for exclude class.
 #'
 #' @param stats A named list of statistics values.
@@ -103,6 +103,12 @@ exclude <- function(data,
 #' @export
 #'
 #' @examples
+#' library(magrittr)
+#' ggplot2::mpg %>% 
+#' init_exclude() %>%
+#'   dplyr::filter(manufacturer == "audi") %>%
+#'   exclude()
+#' get_exclude()
 get_exclude <- function(e_name=NULL) {
   if (is.null(e_name))
     e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
@@ -235,6 +241,13 @@ plot_flow <- function(df) {
 #' @export
 #'
 #' @examples
+#' library(magrittr)
+#' ggplot2::mpg %>% 
+#' init_exclude() %>%
+#'   dplyr::filter(manufacturer == "audi") %>%
+#'   exclude()
+#' e <- get_exclude()
+#' plot(e)
 plot.exclude <- function(x, ...) {
   tibble::as_tibble(x) %>% plot_flow() %>% DiagrammeR::grViz()
 }

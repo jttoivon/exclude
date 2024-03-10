@@ -4,6 +4,8 @@
   if (is.null(.GlobalEnv[[".Exclude"]]))
     .GlobalEnv[[".Exclude"]] <- list()   # This will contain all Exclude objects
   
+  # Set default exclude object name
+  .GlobalEnv[[".Exclude"]]$.current_e_name <- "default"
   # Set the 'exclude.print_messages' option, if unset.
   op <- options()
   op.exclude <- list(

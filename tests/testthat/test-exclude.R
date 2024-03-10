@@ -1,13 +1,14 @@
 # TODO
 # * More checking for the default e_name=="default", are everything initialized correct after
 #   library(exclude)
-# * Make sure tests do not modify .current_e_name
+# * DONE Make sure tests do not modify .current_e_name
 # * DONE Check that output messages are correct
 # * DONE Do not show messages from exclude when testing
 # * Test using more complicated statistics
 
 test_that("exclusion works", {
   withr::local_options(exclude.print_messages=FALSE)
+  local_exclude()
   df <- tibble::tibble(a=1:2, b=c("first", "second")) %>% 
     init_exclude() %>% 
     dplyr::filter(b=="second") %>% 
@@ -19,6 +20,7 @@ test_that("exclusion works", {
 })
 
 test_that("message is correct", {
+  local_exclude()
   orig <- tibble::tibble(a=1:2, b=c("first", "second")) 
   df <- orig
   df <- df %>% 
@@ -34,8 +36,9 @@ test_that("message is correct", {
 })
 
 test_that("exclusion initialization works", {
-  old <- push(NULL, "test")   # Store the original object (if it exists)
-  withr::defer(push(old, "test"))   # Restore the original object at the end of the function
+  #old <- push(NULL, "test")   # Store the original object (if it exists)
+  #withr::defer(push(old, "test"))   # Restore the original object at the end of the function
+  local_exclude("test")
   df <- tibble::tibble(a=1:2)
   init_exclude(df, "test")
   e <- get_exclude()
@@ -43,17 +46,19 @@ test_that("exclusion initialization works", {
 })
 
 test_that("init_exclude does not modify data", {
-  old <- push(NULL, "test")   # Store the original object (if it exists)
+  #old <- push(NULL, "test")   # Store the original object (if it exists)
+  #withr::defer(push(old, "test"))   # Restore the original object at the end of the function
+  local_exclude("test")
   df <- tibble::tibble(x=1:2, y=c("a", "b"))
-  withr::defer(push(old, "test"))   # Restore the original object at the end of the function
   expect_equal(init_exclude(df, "test"), df)
 })
 
 # Test get_exclude
 
 test_that("get_exclude non-existent works", {
-  old <- push(NULL, "non-existing")   # Make sure that the exclusion object does not exist
-  withr::defer(push(old, "non-existing"))   # Do this at the end of function
+  #old <- push(NULL, "non-existing")   # Make sure that the exclusion object does not exist
+  #withr::defer(push(old, "non-existing"))   # Do this at the end of function
+  local_exclude("non-existing")
   expect_equal(get_exclude("non-existing"), NULL)
 })
 
