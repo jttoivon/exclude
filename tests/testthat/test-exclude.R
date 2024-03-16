@@ -5,6 +5,7 @@
 # * DONE Check that output messages are correct
 # * DONE Do not show messages from exclude when testing
 # * Test using more complicated statistics
+# * Test that option exclude.print_messages works
 
 test_that("exclusion works", {
   withr::local_options(exclude.print_messages=FALSE)
@@ -21,6 +22,7 @@ test_that("exclusion works", {
 
 test_that("message is correct", {
   local_exclude()
+  withr::local_options(exclude.print_messages=TRUE)
   orig <- tibble::tibble(a=1:2, b=c("first", "second")) 
   df <- orig
   df <- df %>% 

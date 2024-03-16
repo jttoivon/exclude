@@ -1,9 +1,11 @@
 # TODO
 # * DONE Add option whether to emit messages or not
-# * Change parameter name fmt to something more sensible
+# * DONE Change parameter name fmt to something more sensible
 # * Add examples to functions
-# * Can exclude be made to work for vectors in addition to dataframe?
+# * DONE Can exclude be made to work for vectors in addition to dataframe?
 # * Use some data from base instead of ggplot2::mpg
+# * Maybe add an option that disables exclude completely
+
 #' A constructor for exclude class.
 #'
 #' @param stats A named list of statistics values.
@@ -24,16 +26,17 @@ new_exclude <- function(stats, df, log, statistics) {
 #' @param data A dataframe on which exclusions will be performed.
 #' @param e_name Name of the exclude object.
 #' @param statistics A named list of statistic functions.
-#' @param name Name for the initial dataset.
+#' @param what Name for the initial dataset.
 #'
 #' @return Returns the dataframe invisibly.
+#' @seealso [exclude()] to log exclusions
 #' @importFrom magrittr %>%
 #' @export
 #'
 #' @examples
 init_exclude <- function(data, e_name = "default",
                           statistics = function(data) { list(count = nrow(data)) },
-                          name = "Original data") {
+                          what = "Original data") {
 
   .GlobalEnv[[".Exclude"]][[".current_e_name"]] <- e_name  # Set the name of the current exclude object
   stats <- statistics(data)
@@ -42,9 +45,9 @@ init_exclude <- function(data, e_name = "default",
 
   remain <- purrr::imap_chr(stats, function(value, key) glue::glue("{key}={pretty(value)}")) %>% paste(collapse=" ")
   diff <- purrr::map_chr(names(stats), function(key) glue::glue("{key}=0")) %>% paste(collapse=" ")
-  msg <- glue::glue("{name}: excluded {diff}, remaining {remain}")
+  msg <- glue::glue("{what}: excluded {diff}, remaining {remain}")
 
-  df <- tibble::as_tibble_row(stats) %>% dplyr::mutate(name=name, .before=1)
+  df <- tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what, .before=1)
   .GlobalEnv[[".Exclude"]][[e_name]] <- new_exclude(stats, df, msg, statistics)
   invisible(data)
 }
@@ -52,15 +55,16 @@ init_exclude <- function(data, e_name = "default",
 #' Record the exclusions performed on the dataframe.
 #'
 #' @param data Dataframe
-#' @param fmt Exclusion message.
+#' @param what Exclusion message.
 #' @param e_name Name of the exclude object.
 #'
 #' @return Returns the dataframe invisibly.
+#' @seealso [init_exclude()] to start tracking exclusions
 #' @export
 #'
 #' @examples
 exclude <- function(data,
-                     fmt="Exclusion",
+                     what="Exclusion",
                      e_name=NULL) {
   force(data)   # This is needed to prevent lazy evaluation, which breaks the side-effect
               # of setting a global variable.
@@ -79,11 +83,11 @@ exclude <- function(data,
   #remain_names <- names(stats)
   remain <- purrr::imap_chr(stats, function(value, key) glue::glue("{key}={pretty(value)}")) %>% paste(collapse=" ")
   diff <- purrr::map_chr(names(stats), function(key) glue::glue("{key}={pretty(old_stats[[key]]-stats[[key]])}")) %>% paste(collapse=" ")
-  msg <- glue::glue("{fmt}: excluded {diff}, remaining {remain}")
-  #msg <- glue(fmt, .envir = .GlobalEnv[[".Exclude"]][[e_name]])
+  msg <- glue::glue("{what}: excluded {diff}, remaining {remain}")
+  #msg <- glue(msg, .envir = .GlobalEnv[[".Exclude"]][[e_name]])
   if (getOption("exclude.print_messages")) message(msg)
 
-  df <- df %>% tibble::add_row(tibble::as_tibble_row(stats) %>% dplyr::mutate(name=fmt))
+  df <- df %>% tibble::add_row(tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what))
 
   log <- append(log, msg)
 

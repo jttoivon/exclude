@@ -6,7 +6,16 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of exclude is to keep track of excluded dataframe rows.
+The goal of exclude is to keep track of excluded dataframe rows. It aims
+to be non-intrusive and descriptive. Non-intrusive here means that, for
+example, the base R `subset()` function or the `dplyr` `filter()`
+function don’t need wrappers, and can be called as always. The
+exclusions are measured and logged using additional function calls
+(`init_exclude()` and `exclude()`). The logging is descriptive in that
+user can specify a high-level description of the exclusion to the
+`exclude()` function instead of a mechanical description of how the
+exclusion was done. For example, the exclusion message can be “exclude
+minors” instead of “`filter(age >= 18)`”.
 
 ## Installation
 
@@ -35,8 +44,9 @@ library(tidyverse)
 #> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+The init_exclude() call measures the number of rows in the input
+dataframe, and the exclude() function measures it again and computes the
+difference, and logs the exclusion (with default message “Exclusion”).
 
 ``` r
 ## basic example code
@@ -72,8 +82,7 @@ e
 #> Exclusion: excluded count=216, remaining count=18
 ```
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
+The exclusion object can be converted to a tibble:
 
 ``` r
 as_tibble(e)
@@ -151,22 +160,47 @@ plot(e2)
 <figcaption aria-hidden="true">alt text</figcaption>
 </figure>
 
-<https://quarto.org/docs/authoring/diagrams.html>
+In addition to exclusions in a dataframe, exclusions in a vector can be
+tracked as well. For that the default statistics has to be modified.
 
-``` dot
-digraph graphname {
-node [shape="box"];
-labeljust = l
-             P1 [label = "Original data\lcount=234"]
-P2 [label = "count=18"]
-             M1 [label = "count=0"]
-             P1 -> P2
-             P1 -> M1[label="Exclusion"]
-             { rank=same; P1; M1}
-}
+``` r
+## basic example code
+statistics <- function(v) { list(count = length(v)) }   # Measure the length of the vector
+v <- mpg$manufacturer
+v <- v %>% 
+  init_exclude(statistics = statistics) %>%
+  discard(~ str_starts(., "h")) %>%
+  exclude("Manufacturer starts with and h letter") 
+#> Manufacturer starts with and h letter: excluded count=23, remaining count=211
+e <- get_exclude()
+e
+#> Original data: excluded count=0, remaining count=234
+#> Manufacturer starts with and h letter: excluded count=23, remaining count=211
 ```
 
-<img src="man/figures/README-dot_example-1.png" width="100%" />
+Set the option `exclude.print_messages` to `FALSE` to disable exclusion
+messages:
 
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+``` r
+options(exclude.print_messages = FALSE)
+```
+
+## Similar packages
+
+[tidylog](https://github.com/elbersb/tidylog)
+
+The package is intrusive: it requires wrappers for each of the `dplyr`
+and `tidyr` operations. Does not support base R. Has more abilities than
+exclude, such as keeping track added or removed columns. It is not
+descriptive: instead of logging what has been filtered, it tells how the
+filtering was implemented. Last CRAN release is from 2020-07-03, so it
+might not support the latest updates in tidyverse.
+
+[ExclusionTable](https://cran.r-project.org/web/packages/ExclusionTable/index.html)
+
+The used method is quite intrusive and specific to function `subset()`.
+
+[prismadiagramR](https://cran.r-project.org/web/packages/prismadiagramR/index.html)
+
+Only remotely similar to exclude. Has ability to produce exclusion
+plots.
