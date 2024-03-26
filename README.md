@@ -6,9 +6,9 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of exclude is to keep track of excluded dataframe rows. It aims
-to be non-intrusive and descriptive. Non-intrusive here means that, for
-example, the base R `subset()` function or the `dplyr` `filter()`
+The goal of `exclude` is to keep track of excluded dataframe rows. It
+aims to be non-intrusive and descriptive. Non-intrusive here means that,
+for example, the base R `subset()` function or the `dplyr` `filter()`
 function don’t need wrappers, and can be called as always. The
 exclusions are measured and logged using additional function calls
 (`init_exclude()` and `exclude()`). The logging is descriptive in that
@@ -19,7 +19,7 @@ minors” instead of “`filter(age >= 18)`”.
 
 ## Installation
 
-You can install the development version of exclude like so:
+You can install the development version of `exclude` like so:
 
 ``` r
 devtools::install_github("FRCBS/exclude")
@@ -44,38 +44,18 @@ library(tidyverse)
 #> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 ```
 
-The init_exclude() call measures the number of rows in the input
-dataframe, and the exclude() function measures it again and computes the
-difference, and logs the exclusion (with default message “Exclusion”).
+The `init_exclude()` call measures the number of rows in the input
+dataframe, and the `exclude()` function measures it again and computes
+the difference, and logs the exclusion (with default message
+“Exclusion”).
 
 ``` r
 ## basic example code
-mpg %>% 
+filtered_mpg <- mpg %>% 
   init_exclude() %>%
   filter(manufacturer == "audi") %>%
   exclude()
 #> Exclusion: excluded count=216, remaining count=18
-#> # A tibble: 18 × 11
-#>    manufacturer model      displ  year   cyl trans drv     cty   hwy fl    class
-#>    <chr>        <chr>      <dbl> <int> <int> <chr> <chr> <int> <int> <chr> <chr>
-#>  1 audi         a4           1.8  1999     4 auto… f        18    29 p     comp…
-#>  2 audi         a4           1.8  1999     4 manu… f        21    29 p     comp…
-#>  3 audi         a4           2    2008     4 manu… f        20    31 p     comp…
-#>  4 audi         a4           2    2008     4 auto… f        21    30 p     comp…
-#>  5 audi         a4           2.8  1999     6 auto… f        16    26 p     comp…
-#>  6 audi         a4           2.8  1999     6 manu… f        18    26 p     comp…
-#>  7 audi         a4           3.1  2008     6 auto… f        18    27 p     comp…
-#>  8 audi         a4 quattro   1.8  1999     4 manu… 4        18    26 p     comp…
-#>  9 audi         a4 quattro   1.8  1999     4 auto… 4        16    25 p     comp…
-#> 10 audi         a4 quattro   2    2008     4 manu… 4        20    28 p     comp…
-#> 11 audi         a4 quattro   2    2008     4 auto… 4        19    27 p     comp…
-#> 12 audi         a4 quattro   2.8  1999     6 auto… 4        15    25 p     comp…
-#> 13 audi         a4 quattro   2.8  1999     6 manu… 4        17    25 p     comp…
-#> 14 audi         a4 quattro   3.1  2008     6 auto… 4        17    25 p     comp…
-#> 15 audi         a4 quattro   3.1  2008     6 manu… 4        15    25 p     comp…
-#> 16 audi         a6 quattro   2.8  1999     6 auto… 4        15    24 p     mids…
-#> 17 audi         a6 quattro   3.1  2008     6 auto… 4        17    25 p     mids…
-#> 18 audi         a6 quattro   4.2  2008     8 auto… 4        16    23 p     mids…
 e <- get_exclude()
 e
 #> Original data: excluded count=0, remaining count=234
@@ -108,10 +88,23 @@ webshot2::webshot("/tmp/x.html", "/tmp/x.png")
 And the refer to the png file from the md file.
 -->
 
-<figure>
-<img src="man/figures/plot.svg" alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
+![](man/figures/plot.svg)
+
+Exclusions using base R can also be tracked, but exclude works more
+elegantly with pipes.
+
+``` r
+init_exclude(mpg) 
+filtered_mpg <- subset(mpg, manufacturer == "audi")
+invisible(exclude(filtered_mpg))
+#> Exclusion: excluded count=216, remaining count=18
+e <- get_exclude()
+e
+#> Original data: excluded count=0, remaining count=234
+#> Exclusion: excluded count=216, remaining count=18
+```
+
+An example with several tracked values.
 
 ``` r
 ## basic example code
@@ -155,10 +148,7 @@ e2
 plot(e2)
 ```
 
-<figure>
-<img src="man/figures/plot2.svg" alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
+![](man/figures/plot2.svg)
 
 In addition to exclusions in a dataframe, exclusions in a vector can be
 tracked as well. For that the default statistics has to be modified.

@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of exclude is to keep track of excluded dataframe rows.
+The goal of `exclude` is to keep track of excluded dataframe rows.
 It aims to be non-intrusive and descriptive. Non-intrusive here means that,
 for example, the base R `subset()` function or the `dplyr` `filter()` function 
 don't need wrappers,
@@ -30,7 +30,7 @@ the exclusion message can be "exclude minors" instead of "`filter(age >= 18)`".
 
 ## Installation
 
-You can install the development version of exclude like so:
+You can install the development version of `exclude` like so:
 
 ``` r
 devtools::install_github("FRCBS/exclude")
@@ -45,13 +45,13 @@ library(exclude)
 library(tidyverse)
 ```
 
-The init_exclude() call measures the number of rows in the input dataframe,
-and the exclude() function measures it again and computes the difference, and
+The `init_exclude()` call measures the number of rows in the input dataframe,
+and the `exclude()` function measures it again and computes the difference, and
 logs the exclusion (with default message "Exclusion").
 
 ```{r Example 1}
 ## basic example code
-mpg %>% 
+filtered_mpg <- mpg %>% 
   init_exclude() %>%
   filter(manufacturer == "audi") %>%
   exclude()
@@ -85,7 +85,20 @@ library(DiagrammeRsvg)
 cat(export_svg(plot(e)), file = "man/figures/plot.svg")
 ```
 
-![alt text](man/figures/plot.svg)
+![](man/figures/plot.svg)
+
+Exclusions using base R can also be tracked, but exclude works more elegantly with
+pipes.
+
+```{r}
+init_exclude(mpg) 
+filtered_mpg <- subset(mpg, manufacturer == "audi")
+invisible(exclude(filtered_mpg))
+e <- get_exclude()
+e
+```
+
+An example with several tracked values.
 
 ```{r Example 2}
 ## basic example code
@@ -108,7 +121,7 @@ plot(e2)
 cat(export_svg(plot(e2)), file = "man/figures/plot2.svg")
 ```
 
-![alt text](man/figures/plot2.svg)
+![](man/figures/plot2.svg)
 
 In addition to exclusions in a dataframe, exclusions in a vector can be tracked as well.
 For that the default statistics has to be modified.
