@@ -6,6 +6,7 @@
   
   # Set default exclude object name
   .GlobalEnv[[".Exclude"]]$.current_e_name <- "default"
+  
   # Set the 'exclude.print_messages' option, if unset.
   op <- options()
   op.exclude <- list(

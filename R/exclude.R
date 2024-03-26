@@ -108,11 +108,13 @@ exclude <- function(data,
 #'
 #' @examples
 #' library(magrittr)
-#' ggplot2::mpg %>% 
-#' init_exclude() %>%
-#'   dplyr::filter(manufacturer == "audi") %>%
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' mtcars %>% 
+#'   init_exclude() %>%
+#'   dplyr::filter(gear != 3) %>%
 #'   exclude()
 #' get_exclude()
+#' invisible(exclude:::push(old))  # Only needed in the help page. Restore environment.
 get_exclude <- function(e_name=NULL) {
   if (is.null(e_name))
     e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
@@ -168,12 +170,7 @@ as.data.frame.exclude <- function(x, ...) {
   base::as.data.frame(tibble::as_tibble(x))
 }
 
-# get_tibble <- function(e_name=NULL) {
-#   if (is.null(e_name))
-#     e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
-#   .GlobalEnv[[".Exclude"]][[e_name]]$.df %>%
-#     mutate(across(-name, function (x) lag(x) - x, .names="diff_{.col}"))
-# }
+
 
 #' Visualize the exclusion flow as a string in the dot language
 #'
@@ -246,17 +243,19 @@ plot_flow <- function(df) {
 #'
 #' @examples
 #' library(magrittr)
-#' ggplot2::mpg %>% 
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' mtcars %>% 
 #' init_exclude() %>%
-#'   dplyr::filter(manufacturer == "audi") %>%
+#'   dplyr::filter(gear != 3) %>%
 #'   exclude()
 #' e <- get_exclude()
 #' plot(e)
+#' invisible(exclude:::push(old))  # Only needed in the help page. Restore environment.
 plot.exclude <- function(x, ...) {
   tibble::as_tibble(x) %>% plot_flow() %>% DiagrammeR::grViz()
 }
 
-# These functions are mainly used as helpers in testing
+# These internal functions are mainly used as helpers in testing
 
 ls <- function() {
   setdiff(names(.GlobalEnv[[".Exclude"]]), ".current_e_name")

@@ -1,3 +1,5 @@
 # exclude (development version)
 
-* Initial CRAN submission.
+* Fixed examples in function documentation so that the environment is kept clean.
+
+* Initial submission.
