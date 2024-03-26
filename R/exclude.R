@@ -3,8 +3,10 @@
 # * DONE Change parameter name fmt to something more sensible
 # * Add examples to functions
 # * DONE Can exclude be made to work for vectors in addition to dataframe?
-# * Use some data from base instead of ggplot2::mpg
+# * DONE Use some data from base instead of ggplot2::mpg
 # * Maybe add an option that disables exclude completely
+# * The examples still modify the name of the currect exclude object. Fix this. 
+#   Maybe define store_state() and  restore_state() functions.
 
 #' A constructor for exclude class.
 #'
@@ -17,8 +19,7 @@
 #'
 #' @examples
 new_exclude <- function(stats, df, log, statistics) {
-  #stopifnot(is.character(prefix))
-  structure(list(old=stats, .df=df, .log=log, .statistics=statistics), class = "exclude") # Create S3 object
+  structure(list(old_stats=stats, .df=df, .log=log, .statistics=statistics), class = "exclude") # Create an S3 object
 }
 
 #' Initialize an exclude object
@@ -34,20 +35,28 @@ new_exclude <- function(stats, df, log, statistics) {
 #' @export
 #'
 #' @examples
-init_exclude <- function(data, e_name = "default",
-                          statistics = function(data) { list(count = nrow(data)) },
-                          what = "Original data") {
+#' library(magrittr)
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' init_exclude(mtcars)
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
+init_exclude <- function(data, 
+                         e_name = "default",
+                         statistics = function(data) { list(count = nrow(data)) },
+                         what = "Original data") {
 
   .GlobalEnv[[".Exclude"]][[".current_e_name"]] <- e_name  # Set the name of the current exclude object
   stats <- statistics(data)
 
   pretty <- function(x) format(x, big.mark=",", trim=TRUE)
 
-  remain <- purrr::imap_chr(stats, function(value, key) glue::glue("{key}={pretty(value)}")) %>% paste(collapse=" ")
-  diff <- purrr::map_chr(names(stats), function(key) glue::glue("{key}=0")) %>% paste(collapse=" ")
+  remain <- purrr::imap_chr(stats, function(value, key) glue::glue("{key}={pretty(value)}")) %>% 
+    paste(collapse=" ")
+  diff <- purrr::map_chr(names(stats), function(key) glue::glue("{key}=0")) %>% 
+    paste(collapse=" ")
   msg <- glue::glue("{what}: excluded {diff}, remaining {remain}")
 
   df <- tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what, .before=1)
+  # Create the exclude object
   .GlobalEnv[[".Exclude"]][[e_name]] <- new_exclude(stats, df, msg, statistics)
   invisible(data)
 }
@@ -56,16 +65,23 @@ init_exclude <- function(data, e_name = "default",
 #'
 #' @param data Dataframe
 #' @param what Exclusion message.
-#' @param e_name Name of the exclude object.
+#' @param e_name Name of the exclude object. By default the name of the current exclusion object is used.
 #'
 #' @return Returns the dataframe invisibly.
 #' @seealso [init_exclude()] to start tracking exclusions
 #' @export
 #'
 #' @examples
+#' library(magrittr)
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' mtcars %>% 
+#'   init_exclude() %>%
+#'   dplyr::filter(gear != 3) %>%
+#'   exclude()
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 exclude <- function(data,
-                     what="Exclusion",
-                     e_name=NULL) {
+                    what="Exclusion",
+                    e_name=NULL) {
   force(data)   # This is needed to prevent lazy evaluation, which breaks the side-effect
               # of setting a global variable.
   if (is.null(e_name))
@@ -76,32 +92,35 @@ exclude <- function(data,
 
   stats <- statistics(data)
   .GlobalEnv[[".Exclude"]][[e_name]]$new <- stats
-  old_stats <- .GlobalEnv[[".Exclude"]][[e_name]]$old
+  old_stats <- .GlobalEnv[[".Exclude"]][[e_name]]$old_stats
 
   pretty <- function(x) format(x, big.mark=",", trim=TRUE)
 
-  #remain_names <- names(stats)
-  remain <- purrr::imap_chr(stats, function(value, key) glue::glue("{key}={pretty(value)}")) %>% paste(collapse=" ")
-  diff <- purrr::map_chr(names(stats), function(key) glue::glue("{key}={pretty(old_stats[[key]]-stats[[key]])}")) %>% paste(collapse=" ")
+  remain <- purrr::imap_chr(stats, 
+                            function(value, key) glue::glue("{key}={pretty(value)}")
+                            ) %>% 
+    paste(collapse=" ")
+  diff <- purrr::map_chr(names(stats), 
+                         function(key) glue::glue("{key}={pretty(old_stats[[key]]-stats[[key]])}")
+                         ) %>% 
+    paste(collapse=" ")
   msg <- glue::glue("{what}: excluded {diff}, remaining {remain}")
-  #msg <- glue(msg, .envir = .GlobalEnv[[".Exclude"]][[e_name]])
-  if (getOption("exclude.print_messages")) message(msg)
 
   df <- df %>% tibble::add_row(tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what))
-
   log <- append(log, msg)
 
-  .GlobalEnv[[".Exclude"]][[e_name]]$old <- .GlobalEnv[[".Exclude"]][[e_name]]$new
-
+  .GlobalEnv[[".Exclude"]][[e_name]]$old_stats <- .GlobalEnv[[".Exclude"]][[e_name]]$new
   .GlobalEnv[[".Exclude"]][[e_name]]$.df  <- df
   .GlobalEnv[[".Exclude"]][[e_name]]$.log <- log
 
+  if (getOption("exclude.print_messages")) message(msg)
+  
   data
 }
 
 #' Get the exclude object with name e_name
 #'
-#' @param e_name Name of the wanted exclude object.
+#' @param e_name Name of the wanted exclude object. Default value is the name of the current exclude object.
 #'
 #' @return An exclude object.
 #' @export
@@ -114,7 +133,7 @@ exclude <- function(data,
 #'   dplyr::filter(gear != 3) %>%
 #'   exclude()
 #' get_exclude()
-#' invisible(exclude:::push(old))  # Only needed in the help page. Restore environment.
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 get_exclude <- function(e_name=NULL) {
   if (is.null(e_name))
     e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
@@ -130,6 +149,15 @@ get_exclude <- function(e_name=NULL) {
 #' @export
 #'
 #' @examples
+#' library(magrittr)
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' mtcars %>% 
+#'   init_exclude() %>%
+#'   dplyr::filter(gear != 3) %>%
+#'   exclude()
+#' e <- get_exclude()
+#' print(e)
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 print.exclude <- function(x, ...) {
   cat(x$.log, sep="\n")
 }
@@ -150,6 +178,15 @@ dump_exclude <- function(filename, e_name=NULL) {
 #' @importFrom tibble as_tibble
 #'
 #' @examples
+#' library(magrittr)
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' mtcars %>% 
+#'   init_exclude() %>%
+#'   dplyr::filter(gear != 3) %>%
+#'   exclude()
+#' e <- get_exclude()
+#' as_tibble(e)
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 as_tibble.exclude <- function(x, ...) {
   # For some reason I need to use dplyr::lag instead of stats::lag
   x$.df %>%
@@ -159,13 +196,22 @@ as_tibble.exclude <- function(x, ...) {
 #' Convert an exclude object to a data frame
 #'
 #' @param x An object of class exclude
-#' @param ... Dummy
+#' @param ... Dummy. Only needed to satisfy the requirement from the generic as.data.frame function.
 #'
 #' @return A data.frame.
 #' @export
 #' @importFrom tibble as_tibble
 #'
 #' @examples
+#' library(magrittr)
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' mtcars %>% 
+#'   init_exclude() %>%
+#'   dplyr::filter(gear != 3) %>%
+#'   exclude()
+#' e <- get_exclude()
+#' as.data.frame(e)
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 as.data.frame.exclude <- function(x, ...) {
   base::as.data.frame(tibble::as_tibble(x))
 }
@@ -185,6 +231,15 @@ as.data.frame.exclude <- function(x, ...) {
 #' @export
 #'
 #' @examples
+#' library(magrittr)
+#' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
+#' mtcars %>% 
+#'   init_exclude() %>%
+#'   dplyr::filter(gear != 3) %>%
+#'   exclude()
+#' e <- get_exclude()
+#' plot_flow(as_tibble(e))
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 plot_flow <- function(df) {
   orig <- df %>% purrr::pluck("name", 1)   # Save the name of the original dataset
   remain_cols <- df %>% dplyr::select(!("name" | tidyselect::starts_with("diff_"))) %>% colnames()
@@ -250,7 +305,7 @@ plot_flow <- function(df) {
 #'   exclude()
 #' e <- get_exclude()
 #' plot(e)
-#' invisible(exclude:::push(old))  # Only needed in the help page. Restore environment.
+#' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 plot.exclude <- function(x, ...) {
   tibble::as_tibble(x) %>% plot_flow() %>% DiagrammeR::grViz()
 }
