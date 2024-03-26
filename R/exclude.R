@@ -1,7 +1,7 @@
 # TODO
 # * DONE Add option whether to emit messages or not
 # * DONE Change parameter name fmt to something more sensible
-# * Add examples to functions
+# * DONE Add examples to functions
 # * DONE Can exclude be made to work for vectors in addition to dataframe?
 # * DONE Use some data from base instead of ggplot2::mpg
 # * Maybe add an option that disables exclude completely
