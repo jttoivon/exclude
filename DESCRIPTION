@@ -1,6 +1,6 @@
 Package: exclude
 Title: Keeps track of data exclusions
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
     person("Jarkko", "Toivonen", , "jarkko.toivonen.19@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-6843-5831"))
