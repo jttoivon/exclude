@@ -8,18 +8,60 @@
 # * The examples still modify the name of the currect exclude object. Fix this. 
 #   Maybe define store_state() and  restore_state() functions.
 
-#' A constructor for exclude class.
+#' A constructor for the exclude class.
 #'
-#' @param stats A named list of statistics values.
-#' @param df A dataframe of exclusions
-#' @param log A character vector of log messages
+#' @param data A dataframe on which exclusions will be performed.
 #' @param statistics A named list of statistic functions.
 #'
 #' @return An S3 object of class exclude
+#' @noRd
 #'
 #' @examples
-new_exclude <- function(stats, df, log, statistics) {
-  structure(list(old_stats=stats, .df=df, .log=log, .statistics=statistics), class = "exclude") # Create an S3 object
+#' new_exclude(mtcars, function(data) { list(count = nrow(data)) })
+new_exclude <- function(data, statistics) {
+  # Create an S3 object
+  structure(list(old_stats=statistics(data), df=NULL, log=c(), statistics=statistics), 
+            class = "exclude")
+}
+
+#' The update method for class exclude
+#'
+#' @param object An object of class exclude.
+#' @param data A dataframe on which exclusions will be performed.
+#' @param what Exclusion message.
+#'
+#' @return An S3 object of class exclude
+#' 
+#' @importFrom stats update
+#' @noRd
+#' 
+#' @examples
+#' e <- new_exclude(mtcars, function(data) { list(count = nrow(data)) })
+#' update(e, mtcars, "Exclusion") 
+update.exclude <- function(object, data, what) {
+  #cat("here\n")
+  stats <- object$statistics(data)
+  
+  pretty <- function(x) format(x, big.mark=",", trim=TRUE)
+  
+  remain <- purrr::imap_chr(stats, function(value, key) glue::glue("{key}={pretty(value)}")) %>% 
+    paste(collapse=" ")
+  diff <- purrr::map_chr(names(stats), 
+                         function(key) glue::glue("{key}={pretty(object$old_stats[[key]]-stats[[key]])}")) %>% 
+    paste(collapse=" ")
+  msg <- glue::glue("{what}: excluded {diff}, remaining {remain}")
+  
+  if (is.null(object$df)) {
+    object$df <- tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what, .before=1)
+  } else {
+    object$df <- object$df %>% tibble::add_row(tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what))
+  }
+
+  object$log <- append(object$log, msg)
+  object$old_stats <- stats
+  #str(object)
+  #if (getOption("exclude.print_messages")) message(msg)
+  object
 }
 
 #' Initialize an exclude object
@@ -43,21 +85,13 @@ init_exclude <- function(data,
                          e_name = "default",
                          statistics = function(data) { list(count = nrow(data)) },
                          what = "Original data") {
-
+  #force(statistics)
   .GlobalEnv[[".Exclude"]][[".current_e_name"]] <- e_name  # Set the name of the current exclude object
-  stats <- statistics(data)
-
-  pretty <- function(x) format(x, big.mark=",", trim=TRUE)
-
-  remain <- purrr::imap_chr(stats, function(value, key) glue::glue("{key}={pretty(value)}")) %>% 
-    paste(collapse=" ")
-  diff <- purrr::map_chr(names(stats), function(key) glue::glue("{key}=0")) %>% 
-    paste(collapse=" ")
-  msg <- glue::glue("{what}: excluded {diff}, remaining {remain}")
-
-  df <- tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what, .before=1)
-  # Create the exclude object
-  .GlobalEnv[[".Exclude"]][[e_name]] <- new_exclude(stats, df, msg, statistics)
+  e <- new_exclude(data, statistics)
+  #str(e)
+  e <- update(e, data, what)
+  #str(e)
+  .GlobalEnv[[".Exclude"]][[e_name]] <- e
   invisible(data)
 }
 
@@ -86,33 +120,13 @@ exclude <- function(data,
               # of setting a global variable.
   if (is.null(e_name))
     e_name <- .GlobalEnv[[".Exclude"]]$.current_e_name
-  df <- .GlobalEnv[[".Exclude"]][[e_name]]$.df
-  log <- .GlobalEnv[[".Exclude"]][[e_name]]$.log
-  statistics <- .GlobalEnv[[".Exclude"]][[e_name]]$.statistics
-
-  stats <- statistics(data)
-  .GlobalEnv[[".Exclude"]][[e_name]]$new <- stats
-  old_stats <- .GlobalEnv[[".Exclude"]][[e_name]]$old_stats
-
-  pretty <- function(x) format(x, big.mark=",", trim=TRUE)
-
-  remain <- purrr::imap_chr(stats, 
-                            function(value, key) glue::glue("{key}={pretty(value)}")
-                            ) %>% 
-    paste(collapse=" ")
-  diff <- purrr::map_chr(names(stats), 
-                         function(key) glue::glue("{key}={pretty(old_stats[[key]]-stats[[key]])}")
-                         ) %>% 
-    paste(collapse=" ")
-  msg <- glue::glue("{what}: excluded {diff}, remaining {remain}")
-
-  df <- df %>% tibble::add_row(tibble::as_tibble_row(stats) %>% dplyr::mutate(name=what))
-  log <- append(log, msg)
-
-  .GlobalEnv[[".Exclude"]][[e_name]]$old_stats <- .GlobalEnv[[".Exclude"]][[e_name]]$new
-  .GlobalEnv[[".Exclude"]][[e_name]]$.df  <- df
-  .GlobalEnv[[".Exclude"]][[e_name]]$.log <- log
-
+  e <- .GlobalEnv[[".Exclude"]][[e_name]]
+  
+  e <- update(e, data, what)
+  
+  .GlobalEnv[[".Exclude"]][[e_name]] <- e
+  
+  msg <- e$log[length(e$log)]
   if (getOption("exclude.print_messages")) message(msg)
   
   data
@@ -159,7 +173,7 @@ get_exclude <- function(e_name=NULL) {
 #' print(e)
 #' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 print.exclude <- function(x, ...) {
-  cat(x$.log, sep="\n")
+  cat(x$log, sep="\n")
 }
 
 dump_exclude <- function(filename, e_name=NULL) {
@@ -185,11 +199,11 @@ dump_exclude <- function(filename, e_name=NULL) {
 #'   dplyr::filter(gear != 3) %>%
 #'   exclude()
 #' e <- get_exclude()
-#' as_tibble(e)
+#' tibble::as_tibble(e)
 #' invisible(exclude:::push(old, "default"))  # Only needed in the help page. Restore environment.
 as_tibble.exclude <- function(x, ...) {
   # For some reason I need to use dplyr::lag instead of stats::lag
-  x$.df %>%
+  x$df %>%
     dplyr::mutate(dplyr::across(-"name", function (c) {dplyr::lag(c) - c}, .names="diff_{.col}"))
 }
 
@@ -232,6 +246,7 @@ as.data.frame.exclude <- function(x, ...) {
 #'
 #' @examples
 #' library(magrittr)
+#' library(tibble)
 #' old <- exclude:::pop("default") # Only needed in the help page. Keeps environment clean.
 #' mtcars %>% 
 #'   init_exclude() %>%
