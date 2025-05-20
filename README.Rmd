@@ -34,7 +34,7 @@ the exclusion message can be "exclude minors" instead of "`filter(age >= 18)`".
 You can install the development version of `exclude` like so:
 
 ``` r
-devtools::install_github("FRCBS/exclude")
+devtools::install_github("jttoivon/exclude")
 ```
 
 ## Examples
