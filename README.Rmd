@@ -37,6 +37,18 @@ You can install the development version of `exclude` like so:
 devtools::install_github("jttoivon/exclude")
 ```
 
+Or, if internet is not available, from a source directory
+
+``` r
+devtools::install("path-to-directory")
+```
+
+or from a zip file of source
+
+``` r
+remotes::install_local("path-to-file.zip")
+```
+
 ## Examples
 
 This is a basic example which shows you how to solve a common problem:
@@ -134,7 +146,7 @@ v <- mpg$manufacturer
 v <- v %>% 
   init_exclude(statistics = statistics) %>%
   discard(~ str_starts(., "h")) %>%
-  exclude("Manufacturer starts with and h letter") 
+  exclude("Manufacturer starts with an h letter") 
 e <- get_exclude()
 e
 ```
@@ -144,6 +156,12 @@ Set the option `exclude.print_messages` to `FALSE` to disable exclusion messages
 ```{r}
 options(exclude.print_messages = FALSE)
 ```
+
+## Advanced usage
+
+The functions `init_exclude()`, `exclude()` and `get_exclude()` accept also parameter `e_name` that
+can be used to have multiple independent exclude objects existing simultaneously.
+The exclude objects are actually hidden global objects, and they can be referred to with the `e_name` parameter.
 
 ## Similar packages
 

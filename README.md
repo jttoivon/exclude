@@ -27,6 +27,18 @@ You can install the development version of `exclude` like so:
 devtools::install_github("jttoivon/exclude")
 ```
 
+Or, if internet is not available, from a source directory
+
+``` r
+devtools::install("path-to-directory")
+```
+
+or from a zip file of source
+
+``` r
+remotes::install_local("path-to-file.zip")
+```
+
 ## Examples
 
 This is a basic example which shows you how to solve a common problem:
@@ -35,11 +47,11 @@ This is a basic example which shows you how to solve a common problem:
 library(exclude)
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.4     ✔ readr     2.1.5
-#> ✔ forcats   1.0.0     ✔ stringr   1.5.1
-#> ✔ ggplot2   3.5.2     ✔ tibble    3.2.1
-#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-#> ✔ purrr     1.0.4     
+#> ✔ dplyr     1.2.0     ✔ readr     2.2.0
+#> ✔ forcats   1.0.1     ✔ stringr   1.6.0
+#> ✔ ggplot2   4.0.2     ✔ tibble    3.3.1
+#> ✔ lubridate 1.9.5     ✔ tidyr     1.3.2
+#> ✔ purrr     1.2.1     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
@@ -162,12 +174,12 @@ v <- mpg$manufacturer
 v <- v %>% 
   init_exclude(statistics = statistics) %>%
   discard(~ str_starts(., "h")) %>%
-  exclude("Manufacturer starts with and h letter") 
-#> Manufacturer starts with and h letter: excluded count=23, remaining count=211
+  exclude("Manufacturer starts with an h letter") 
+#> Manufacturer starts with an h letter: excluded count=23, remaining count=211
 e <- get_exclude()
 e
 #> Original data: excluded count=0, remaining count=234
-#> Manufacturer starts with and h letter: excluded count=23, remaining count=211
+#> Manufacturer starts with an h letter: excluded count=23, remaining count=211
 ```
 
 Set the option `exclude.print_messages` to `FALSE` to disable exclusion
@@ -176,6 +188,14 @@ messages:
 ``` r
 options(exclude.print_messages = FALSE)
 ```
+
+## Advanced usage
+
+The functions `init_exclude()`, `exclude()` and `get_exclude()` accept
+also parameter `e_name` that can be used to have multiple independent
+exclude objects existing simultaneously. The exclude objects are
+actually hidden global objects, and they can be referred to with the
+`e_name` parameter.
 
 ## Similar packages
 
