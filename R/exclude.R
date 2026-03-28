@@ -7,7 +7,8 @@
 # * Maybe add an option that disables exclude completely
 # * The examples still modify the name of the currect exclude object. Fix this. 
 #   Maybe define store_state() and  restore_state() functions.
-
+# * Why get_exclude() function has different default value for parameter e_name
+#    than functions init_exclude() and exclude()?
 #' A constructor for the exclude class.
 #'
 #' @param data A dataframe on which exclusions will be performed.
