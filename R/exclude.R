@@ -27,6 +27,9 @@ new_exclude <- function(data, statistics) {
 
 #' The update method for class exclude
 #'
+#' @description
+#' An internal method. 
+#' 
 #' @param object An object of class exclude.
 #' @param data A dataframe on which exclusions will be performed.
 #' @param what Exclusion message.
@@ -34,12 +37,13 @@ new_exclude <- function(data, statistics) {
 #' @return An S3 object of class exclude
 #' 
 #' @importFrom stats update
+#' @export
 #' @noRd
 #' 
 #' @examples
 #' e <- new_exclude(mtcars, function(data) { list(count = nrow(data)) })
 #' update(e, mtcars, "Exclusion") 
-update.exclude <- function(object, data, what) {
+update.exclude <- function(object, data, what, ...) {
   #cat("here\n")
   stats <- object$statistics(data)
   
