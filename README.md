@@ -167,16 +167,22 @@ plot(e2)
 The plot can be saved to a dot file with
 
 ``` r
-e2 %>% as_tibble() %>% plot_flow() %>% cat(file = "nameofthefile.dot")
+e2 %>% as_tibble() %>% plot_flow() %>% cat(file = "example.dot")
+```
+
+The dot file can be converted to various image formats using Graphviz:
+
+``` bash
+dot example.dot -T png -o example.png
 ```
 
 The plot can be saved to an svg file with
 
 ``` r
-e2 %>% plot() %>% DiagrammeRsvg::export_svg() %>% cat(file = "nameofthefile.svg")
+e2 %>% plot() %>% DiagrammeRsvg::export_svg() %>% cat(file = "example.svg")
 # or
 e2 %>% as_tibble() %>% plot_flow() %>% DiagrammeR::grViz() %>% DiagrammeRsvg::export_svg() %>%
-  cat(file = "nameofthefile.svg")
+  cat(file = "example.svg")
 ```
 
 In addition to exclusions in a dataframe, exclusions in a vector can be
