@@ -47,11 +47,11 @@ This is a basic example which shows you how to solve a common problem:
 library(exclude)
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.2.0     ✔ readr     2.2.0
+#> ✔ dplyr     1.2.1     ✔ readr     2.2.0
 #> ✔ forcats   1.0.1     ✔ stringr   1.6.0
-#> ✔ ggplot2   4.0.2     ✔ tibble    3.3.1
+#> ✔ ggplot2   4.0.3     ✔ tibble    3.3.1
 #> ✔ lubridate 1.9.5     ✔ tidyr     1.3.2
-#> ✔ purrr     1.2.1     
+#> ✔ purrr     1.2.2     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
@@ -163,6 +163,21 @@ plot(e2)
 ```
 
 ![](man/figures/plot2.svg)
+
+The plot can be saved to a dot file with
+
+``` r
+e2 %>% as_tibble() %>% plot_flow() %>% cat(file = "nameofthefile.dot")
+```
+
+The plot can be saved to an svg file with
+
+``` r
+e2 %>% plot() %>% DiagrammeRsvg::export_svg() %>% cat(file = "nameofthefile.svg")
+# or
+e2 %>% as_tibble() %>% plot_flow() %>% DiagrammeR::grViz() %>% DiagrammeRsvg::export_svg() %>%
+  cat(file = "nameofthefile.svg")
+```
 
 In addition to exclusions in a dataframe, exclusions in a vector can be
 tracked as well. For that the default statistics has to be modified.

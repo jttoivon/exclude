@@ -136,6 +136,21 @@ cat(export_svg(plot(e2)), file = "man/figures/plot2.svg")
 
 ![](man/figures/plot2.svg)
 
+The plot can be saved to a dot file with
+
+```{r, eval=FALSE}
+e2 %>% as_tibble() %>% plot_flow() %>% cat(file = "nameofthefile.dot")
+```
+
+The plot can be saved to an svg file with
+
+```{r, eval=FALSE}
+e2 %>% plot() %>% DiagrammeRsvg::export_svg() %>% cat(file = "nameofthefile.svg")
+# or
+e2 %>% as_tibble() %>% plot_flow() %>% DiagrammeR::grViz() %>% DiagrammeRsvg::export_svg() %>%
+  cat(file = "nameofthefile.svg")
+```
+
 In addition to exclusions in a dataframe, exclusions in a vector can be tracked as well.
 For that the default statistics has to be modified.
 
