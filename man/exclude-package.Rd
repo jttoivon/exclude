@@ -18,5 +18,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Jarkko Toivonen \email{jarkko.toivonen.19@gmail.com} (\href{https://orcid.org/0000-0002-6843-5831}{ORCID})
 
+Authors:
+\itemize{
+  \item Jarkko Toivonen \email{jarkko.toivonen.19@gmail.com} (\href{https://orcid.org/0000-0002-6843-5831}{ORCID})
+}
+
 }
 \keyword{internal}
